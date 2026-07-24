@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ClearSight Trades</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{background:#0a0f0a;color:#e8f0e8;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;min-height:100vh;max-width:430px;margin:0 auto;position:relative;overflow-x:hidden;}
+  .screen{display:none}
+  .screen.active{display:block;padding-bottom:90px;}
+
+  /* TAB BAR */
+  .tab-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:#0d1a0d;border-top:1px solid #1e3a1e;display:flex;justify-content:space-around;align-items:center;padding:6px 4px 14px;z-index:999;}
+  .tab{background:none;border:none;color:#5a7a5a;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:6px 8px;border-radius:10px;transition:all 0.2s;min-width:44px;}
+  .tab.tabon{color:#d4a574;}
+  .tab.tabon .tab-icon{background:#1e3a1e;border-radius:10px;padding:4px 10px;}
+  .tab-icon{font-size:20px;line-height:1;}
+  .tab-label{font-size:9px;font-weight:600;letter-spacing:0.3px;white-space:nowrap;}
+
+  /* COMMON */
+  .header{background:linear-gradient(160deg,#0d1a0d,#152815);padding:50px 20px 24px;text-align:center;border-bottom:1px solid #1e3a1e;}
+  .wordmark{font-size:24px;font-weight:800;color:#d4a574;letter-spacing:-0.5px;}
+  .wordmark span{color:#2c5f2d;}
+  .tagline{font-size:12px;color:#7a9a7a;margin-top:4px;}
+  .section-title{font-size:13px;font-weight:700;color:#7a9a7a;text-transform:uppercase;letter-spacing:1px;padding:20px 20px 8px;}
+  .card{background:#0d1a0d;border:1px solid #1e3a1e;border-radius:16px;margin:0 16px 12px;overflow:hidden;}
+  .btn-primary{background:#2c5f2d;color:#e8f0e8;border:none;border-radius:12px;padding:14px 24px;font-size:15px;font-weight:700;cursor:pointer;width:100%;transition:all 0.2s;}
+  .btn-primary:active{transform:scale(0.97);background:#245024;}
+  .btn-secondary{background:transparent;color:#d4a574;border:1.5px solid #d4a574;border-radius:12px;padding:12px 20px;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s;}
+  .btn-secondary:active{transform:scale(0.97);background:#1e1408;}
+  .badge{background:#2c5f2d;color:#e8f0e8;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;}
+  .badge-gold{background:#d4a574;color:#0a0f0a;}
+  .chip{display:inline-block;background:#1e3a1e;color:#a8c8a8;font-size:11px;padding:4px 10px;border-radius:20px;margin:3px 2px;}
+  .divider{height:1px;background:#1e3a1e;margin:0 20px;}
+  .avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#2c5f2d,#4a8f4a);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+  .star{color:#d4a574;font-size:14px;}
+  .star.empty{color:#2a3a2a;}
+  .input-field{background:#0d1a0d;border:1.5px solid #1e3a1e;border-radius:12px;padding:14px 16px;color:#e8f0e8;font-size:15px;width:100%;margin-bottom:12px;outline:none;}
+  .input-field:focus{border-color:#2c5f2d;}
+  .input-label{font-size:12px;color:#7a9a7a;margin-bottom:4px;font-weight:600;}
+  .status-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;}
+  .dot-green{background:#4caf50;}
+  .dot-orange{background:#ff9800;}
+
+  /* HOME SCREEN */
+  .hero-banner{background:linear-gradient(135deg,#152815,#0d1a0d);padding:28px 20px;margin:16px;border-radius:20px;border:1px solid #2c5f2d;position:relative;overflow:hidden;}
+  .hero-banner::before{content:'🌲';position:absolute;right:-10px;top:-10px;font-size:80px;opacity:0.08;}
+  .hero-title{font-size:22px;font-weight:800;color:#e8f0e8;line-height:1.2;}
+  .hero-title span{color:#d4a574;}
+  .hero-sub{font-size:13px;color:#7a9a7a;margin:8px 0 16px;}
+  .quick-stats{display:flex;gap:10px;margin:0 16px 4px;}
+  .stat-card{flex:1;background:#0d1a0d;border:1px solid #1e3a1e;border-radius:14px;padding:14px 10px;text-align:center;}
+  .stat-num{font-size:22px;font-weight:800;color:#d4a574;}
+  .stat-label{font-size:10px;color:#7a9a7a;margin-top:2px;}
+  .service-row{display:flex;gap:10px;padding:0 16px;margin-bottom:4px;}
+  .service-chip{flex:1;background:#0d1a0d;border:1px solid #1e3a1e;border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;transition:all 0.2s;}
+  .service-chip:active{border-color:#2c5f2d;background:#0f1e0f;}
+  .service-chip .icon{font-size:24px;}
+  .service-chip .label{font-size:11px;color:#a8c8a8;margin-top:4px;font-weight:600;}
+  .notif-bar{background:#1a2e1a;border-left:3px solid #d4a574;border-radius:10px;padding:12px 14px;margin:12px 16px;display:flex;align-items:center;gap:10px;}
+  .notif-text{font-size:12px;color:#c8e0c8;}
+
+  /* BOOKING */
+  .booking-step{background:#0d1a0d;border:1px solid #1e3a1e;border-radius:16px;margin:0 16px 12px;padding:16px;}
+  .step-num{width:26px;height:26px;border-radius:50%;background:#2c5f2d;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .step-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+  .step-title{font-size:14px;font-weight:700;color:#e8f0e8;}
+  .time-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .time-slot{background:#152815;border:1px solid #1e3a1e;border-radius:10px;padding:10px;text-align:center;font-size:13px;color:#a8c8a8;cursor:pointer;transition:all 0.2s;}
+  .time-slot.selected{background:#2c5f2d;border-color:#2c5f2d;color:#fff;font-weight:700;}
+  .time-slot:active{transform:scale(0.96);}
+  .date-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;}
+  .date-pill{background:#152815;border:1px solid #1e3a1e;border-radius:12px;padding:10px 14px;text-align:center;flex-shrink:0;cursor:pointer;transition:all 0.2s;}
+  .date-pill.selected{background:#2c5f2d;border-color:#2c5f2d;}
+  .date-day{font-size:10px;color:#7a9a7a;}
+  .date-num{font-size:16px;font-weight:700;color:#e8f0e8;}
+  .service-select-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #1e3a1e;}
+  .service-select-item:last-child{border-bottom:none;}
+  .service-radio{width:20px;height:20px;border-radius:50%;border:2px solid #2c5f2d;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .service-radio.on::after{content:'';width:10px;height:10px;border-radius:50%;background:#2c5f2d;display:block;}
+  .service-info{flex:1;}
+  .service-name{font-size:14px;font-weight:600;color:#e8f0e8;}
+  .service-duration{font-size:11px;color:#7a9a7a;}
+  .service-price{color:#d4a574;font-weight:700;font-size:14px;}
+
+  /* PAYMENTS */
+  .payment-card{background:linear-gradient(135deg,#1a3a1a,#0d1a0d);border:1px solid #2c5f2d;border-radius:20px;padding:22px;margin:0 16px 16px;}
+  .payment-amount{font-size:38px;font-weight:800;color:#d4a574;}
+  .payment-desc{font-size:13px;color:#7a9a7a;margin-top:4px;}
+  .payment-method{display:flex;align-items:center;gap:12px;padding:14px;background:#0d1a0d;border:1.5px solid #1e3a1e;border-radius:14px;margin:0 16px 10px;cursor:pointer;transition:all 0.2s;}
+  .payment-method.selected{border-color:#2c5f2d;background:#0f1e0f;}
+  .payment-method:active{transform:scale(0.98);}
+  .method-icon{font-size:24px;}
+  .method-name{font-size:14px;font-weight:600;color:#e8f0e8;}
+  .method-sub{font-size:11px;color:#7a9a7a;}
+  .method-check{margin-left:auto;color:#2c5f2d;font-size:18px;}
+  .invoice-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #1e3a1e;}
+  .invoice-row:last-child{border-bottom:none;}
+  .invoice-label{font-size:13px;color:#7a9a7a;}
+  .invoice-value{font-size:13px;color:#e8f0e8;font-weight:600;}
+  .invoice-total .invoice-label{color:#e8f0e8;font-weight:700;font-size:15px;}
+  .invoice-total .invoice-value{color:#d4a574;font-size:15px;}
+
+  /* PROFILE */
+  .profile-header{background:linear-gradient(160deg,#152815,#0d1a0d);padding:40px 20px 24px;text-align:center;border-bottom:1px solid #1e3a1e;}
+  .profile-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#2c5f2d,#4a8f4a);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 12px;border:3px solid #d4a574;}
+  .profile-name{font-size:20px;font-weight:800;color:#e8f0e8;}
+  .profile-email{font-size:13px;color:#7a9a7a;margin-top:3px;}
+  .profile-row{display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid #1a2a1a;cursor:pointer;transition:background 0.2s;}
+  .profile-row:active{background:#0f1e0f;}
+  .profile-icon{font-size:20px;width:36px;height:36px;background:#1a2e1a;border-radius:10px;display:flex;align-items:center;justify-content:center;}
+  .profile-text .title{font-size:14px;font-weight:600;color:#e8f0e8;}
+  .profile-text .sub{font-size:11px;color:#7a9a7a;margin-top:2px;}
+  .profile-arrow{margin-left:auto;color:#3a5a3a;font-size:16px;}
+  .appt-mini{display:flex;align-items:center;gap:12px;padding:14px 16px;background:#0d1a0d;border:1px solid #1e3a1e;border-radius:14px;margin:0 16px 10px;cursor:pointer;}
+  .appt-mini:active{border-color:#2c5f2d;}
+  .appt-date-box{background:#2c5f2d;border-radius:10px;padding:8px 10px;text-align:center;min-width:44px;}
+  .appt-month{font-size:9px;font-weight:700;color:#b8e0b8;text-transform:uppercase;}
+  .appt-day{font-size:20px;font-weight:800;color:#fff;line-height:1;}
+
+  /* GALLERY */
+  .gallery-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px;}
+  .gallery-item{border-radius:14px;overflow:hidden;aspect-ratio:1;position:relative;cursor:pointer;background:#0d1a0d;border:1px solid #1e3a1e;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+  .gallery-item:active{transform:scale(0.97);}
+  .gallery-item.featured{grid-column:span 2;aspect-ratio:2/1;}
+  .gallery-emoji{font-size:48px;}
+  .gallery-item .overlay{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.7));padding:10px;display:flex;align-items:flex-end;}
+  .gallery-caption{font-size:11px;color:#e8f0e8;font-weight:600;}
+  .gallery-filter{display:flex;gap:8px;padding:0 16px;margin-bottom:12px;overflow-x:auto;}
+  .filter-btn{background:#0d1a0d;border:1px solid #1e3a1e;color:#7a9a7a;border-radius:20px;padding:7px 16px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+  .filter-btn.active{background:#2c5f2d;border-color:#2c5f2d;color:#fff;}
+
+  /* REVIEWS */
+  .review-summary{background:linear-gradient(135deg,#152815,#0d1a0d);border:1px solid #1e3a1e;border-radius:20px;margin:0 16px 8px;padding:20px;}
+  .big-rating{font-size:54px;font-weight:800;color:#d4a574;line-height:1;}
+  .rating-stars{font-size:20px;margin:4px 0;}
+  .rating-count{font-size:12px;color:#7a9a7a;}
+  .rating-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+  .rating-bar-label{font-size:12px;color:#7a9a7a;width:16px;text-align:right;}
+  .rating-bar-track{flex:1;height:6px;background:#1e3a1e;border-radius:3px;overflow:hidden;}
+  .rating-bar-fill{height:100%;background:#d4a574;border-radius:3px;}
+  .review-card{background:#0d1a0d;border:1px solid #1e3a1e;border-radius:16px;margin:0 16px 10px;padding:16px;}
+  .review-header{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  .review-name{font-size:14px;font-weight:700;color:#e8f0e8;}
+  .review-date{font-size:11px;color:#7a9a7a;margin-top:1px;}
+  .review-text{font-size:13px;color:#a8c8a8;line-height:1.5;}
+  .review-service{font-size:11px;color:#7a9a7a;margin-top:6px;}
+
+  /* NOTIFICATIONS */
+  .notif-item{display:flex;align-items:flex-start;gap:12px;padding:16px;border-bottom:1px solid #1a2a1a;cursor:pointer;transition:background 0.2s;}
+  .notif-item:active{background:#0f1e0f;}
+  .notif-item.unread{background:#0d1a0d;}
+  .notif-dot{width:8px;height:8px;border-radius:50%;background:#d4a574;margin-top:4px;flex-shrink:0;}
+  .notif-dot.read{background:transparent;border:1px solid #3a5a3a;}
+  .notif-icon-wrap{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+  .ni-green{background:#1a3a1a;}
+  .ni-gold{background:#2a1e0a;}
+  .notif-content .title{font-size:13px;font-weight:700;color:#e8f0e8;}
+  .notif-content .body{font-size:12px;color:#7a9a7a;margin-top:3px;line-height:1.4;}
+  .notif-time{font-size:10px;color:#5a7a5a;margin-top:4px;}
+  .notif-unread-badge{background:#d4a574;color:#0a0f0a;font-size:9px;font-weight:800;padding:2px 6px;border-radius:10px;margin-left:auto;flex-shrink:0;}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:#2c5f2d;color:#fff;padding:12px 24px;border-radius:30px;font-size:13px;font-weight:600;opacity:0;transition:all 0.3s;pointer-events:none;z-index:9999;white-space:nowrap;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* CONFIRMATION */
+  .confirm-box{background:#0d1a0d;border:1px solid #2c5f2d;border-radius:20px;margin:16px;padding:24px;text-align:center;}
+  .confirm-icon{font-size:60px;margin-bottom:12px;}
+  .confirm-title{font-size:20px;font-weight:800;color:#e8f0e8;}
+  .confirm-sub{font-size:13px;color:#7a9a7a;margin-top:6px;line-height:1.5;}
+  .confirm-detail{background:#152815;border-radius:14px;padding:16px;margin-top:16px;text-align:left;}
+  .confirm-row{display:flex;justify-content:space-between;padding:6px 0;}
+  .confirm-key{font-size:12px;color:#7a9a7a;}
+  .confirm-val{font-size:12px;color:#d4a574;font-weight:600;}
+</style>
+</head>
+<body>
+
+<!-- FIXED TAB BAR -->
+<div class="tab-bar">
+  <button class="tab tabon" id="tab-home" onclick="showScreen('screen-home')">
+    <span class="tab-icon">🏠</span><span class="tab-label">Home</span>
+  </button>
+  <button class="tab" id="tab-book" onclick="showScreen('screen-book')">
+    <span class="tab-icon">📅</span><span class="tab-label">Book</span>
+  </button>
+  <button class="tab" id="tab-payments" onclick="showScreen('screen-payments')">
+    <span class="tab-icon">💳</span><span class="tab-label">Payments</span>
+  </button>
+  <button class="tab" id="tab-gallery" onclick="showScreen('screen-gallery')">
+    <span class="tab-icon">📷</span><span class="tab-label">Gallery</span>
+  </button>
+  <button class="tab" id="tab-reviews" onclick="showScreen('screen-reviews')">
+    <span class="tab-icon">⭐</span><span class="tab-label">Reviews</span>
+  </button>
+  <button class="tab" id="tab-notifs" onclick="showScreen('screen-notifs')">
+    <span class="tab-icon">🔔</span><span class="tab-label">Alerts</span>
+  </button>
+  <button class="tab" id="tab-profile" onclick="showScreen('screen-profile')">
+    <span class="tab-icon">👤</span><span class="tab-label">Profile</span>
+  </button>
+</div>
+
+<!-- ═══════════════ HOME SCREEN ═══════════════ -->
+<div class="screen active" id="screen-home">
+  <div class="header">
+    <div class="wordmark">Clear<span>Sight</span> Trades</div>
+    <div class="tagline">Professional Trade Services</div>
+  </div>
+
+  <div class="hero-banner" style="margin-top:16px;">
+    <div class="hero-title">Your Trusted <span>Trade</span><br>Specialists</div>
+    <div class="hero-sub">Electrical · Plumbing · HVAC · Roofing</div>
+    <button class="btn-primary" style="max-width:200px;" onclick="showScreen('screen-book')">Book a Job Now</button>
+  </div>
+
+  <div class="notif-bar" onclick="showScreen('screen-notifs')">
+    <span style="font-size:20px;">🔔</span>
+    <div class="notif-text">Reminder: Your appointment tomorrow at 9:00 AM is confirmed. Tap to view.</div>
+  </div>
+
+  <div class="quick-stats">
+    <div class="stat-card">
+      <div class="stat-num">4.9</div>
+      <div class="stat-label">Rating</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">850+</div>
+      <div class="stat-label">Jobs Done</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">12yr</div>
+      <div class="stat-label">Experience</div>
+    </div>
+  </div>
+
+  <div class="section-title">Our Services</div>
+  <div class="service-row">
+    <div class="service-chip" onclick="showScreen('screen-book')">
+      <div class="icon">⚡</div>
+      <div class="label">Electrical</div>
+    </div>
+    <div class="service-chip" onclick="showScreen('screen-book')">
+      <div class="icon">🔧</div>
+      <div class="label">Plumbing</div>
+    </div>
+    <div class="service-chip" onclick="showScreen('screen-book')">
+      <div class="icon">❄️</div>
+      <div class="label">HVAC</div>
+    </div>
+    <div class="service-chip" onclick="showScreen('screen-book')">
+      <div class="icon">🏠</div>
+      <div class="label">Roofing</div>
+    </div>
+  </div>
+
+  <div class="section-title">Your Upcoming Jobs</div>
+  <div class="appt-mini" onclick="showScreen('screen-profile')">
+    <div class="appt-date-box">
+      <div class="appt-month">JUL</div>
+      <div class="appt-day">18</div>
+    </div>
+    <div style="flex:1;">
+      <div style="font-size:14px;font-weight:700;color:#e8f0e8;">Electrical Inspection</div>
+      <div style="font-size:12px;color:#7a9a7a;margin-top:2px;">9:00 AM · James R.</div>
+    </div>
+    <span class="badge">Confirmed</span>
+  </div>
+  <div class="appt-mini" onclick="showScreen('screen-profile')">
+    <div class="appt-date-box" style="background:#d4a574;">
+      <div class="appt-month" style="color:#5a3a0a;">AUG</div>
+      <div class="appt-day" style="color:#0a0f0a;">03</div>
+    </div>
+    <div style="flex:1;">
+      <div style="font-size:14px;font-weight:700;color:#e8f0e8;">Plumbing Repair</div>
+      <div style="font-size:12px;color:#7a9a7a;margin-top:2px;">2:30 PM · Sarah M.</div>
+    </div>
+    <span class="badge badge-gold">Pending</span>
+  </div>
+
+  <div class="section-title">Recent Reviews</div>
+  <div class="review-card" onclick="showScreen('screen-reviews')">
+    <div class="review-header">
+      <div class="avatar">T</div>
+      <div>
+        <div class="review-name">Tom H.</div>
+        <div style="font-size:14px;color:#d4a574;">★★★★★</div>
+      </div>
+    </div>
+    <div class="review-text">"Incredible work on our electrical panel. Fast, professional and fairly priced. Will definitely book again!"</div>
+  </div>
+
+  <div style="padding:0 16px 8px;">
+    <button class="btn-secondary" style="width:100%;" onclick="showScreen('screen-reviews')">View All Reviews →</button>
+  </div>
+
+  <div style="padding:0 16px 8px;">
+    <button class="btn-primary" onclick="showScreen('screen-gallery')">📷 View Our Work</button>
+  </div>
+</div>
+
+<!-- ═══════════════ BOOKING SCREEN ═══════════════ -->
+<div class="screen" id="screen-book">
+  <div class="header">
+    <div class="wordmark">Clear<span>Sight</span> Trades</div>
+    <div class="tagline">Online Booking</div>
+  </div>
+
+  <div class="section-title">Select a Service</div>
+  <div class="booking-step">
+    <div class="step-header">
+      <div class="step-num">1</div>
+      <div class="step-title">What do you need?</div>
+    </div>
+    <div class="service-select-item" onclick="selectService(this,'Electrical Inspection','60 min','$120')">
+      <div class="service-radio on"></div>
+      <div class="service-info">
+        <div class="service-name">⚡ Electrical Inspection</div>
+        <div class="service-duration">60 min · Full safety check</div>
+      </div>
+      <div class="service-price">$120</div>
+    </div>
+    <div class="service-select-item" onclick="selectService(this,'Plumbing Repair','90 min','$180')">
+      <div class="service-radio"></div>
+      <div class="service-info">
+        <div class="service-name">🔧 Plumbing Repair</div>
+        <div class="service-duration">90 min · Leak & pipe work</div>
+      </div>
+      <div class="service-price">$180</div>
+    </div>
+    <div class="service-select-item" onclick="selectService(this,'HVAC Service','120 min','$240')">
+      <div class="service-radio"></div>
+      <div class="service-info">
+        <div class="service-name">❄️ HVAC Service</div>
+        <div class="service-duration">120 min · Full system tune-up</div>
+      </div>
+      <div class="service-price">$240</div>
+    </div>
+    <div class="service-select-item" onclick="selectService(this,'Roof Inspection','45 min','$95')">
+      <div class="service-radio"></div>
+      <div class="service-info">
+        <div class="service-name">🏠 Roof Inspection</div>
+        <div class="service-duration">45 min · Drone + visual</div>
+      </div>
+      <div class="service-price">$95</div>
+    </div>
+  </div>
+
+  <div class="section-title">Pick a Date</div>
+  <div class="booking-step">
+    <div class="step-header">
+      <div class="step-num">2</div>
+      <div class="step-title">Select date</div>
+    </div>
+    <div class="date-row" id="dateRow">
+      <div class="date-pill selected" onclick="selectDate(this,'Mon','Jul 14')"><div class="date-day">Mon</div><div class="date-num">14</div></div>
+      <div class="date-pill" onclick="selectDate(this,'Tue','Jul 15')"><div class="date-day">Tue</div><div class="date-num">15</div></div>
+      <div class="date-pill" onclick="selectDate(this,'Wed','Jul 16')"><div class="date-day">Wed</div><div class="date-num">16</div></div>
+      <div class="date-pill" onclick="selectDate(this,'Thu','Jul 17')"><div class="date-day">Thu</div><div class="date-num">17</div></div>
+      <div class="date-pill" onclick="selectDate(this,'Fri','Jul 18')"><div class="date-day">Fri</div><div class="date-num">18</div></div>
+      <div class="date-pill" onclick="selectDate(this,'Mon','Jul 21')"><div class="date-day">Mon</div><div class="date-num">21</div></div>
+      <div class="date-pill" onclick="selectDate(this,'Tue','Jul 22')"><div class="date-day">Tue</div><div class="date-num">22</div></div>
+    </div>
+  </div>
+
+  <div class="section-title">Choose a Time</div>
+  <div class="booking-step">
+    <div class="step-header">
+      <div class="step-num">3</div>
+      <div class="step-title">Available slots</div>
+    </div>
+    <div class="time-grid">
+      <div class="time-slot selected" onclick="selectTime(this)">8:00 AM</div>
+      <div class="time-slot" onclick="selectTime(this)">9:00 AM</div>
+      <div class="time-slot" onclick="selectTime(this)">10:00 AM</div>
+      <div class="time-slot" onclick="selectTime(this)">11:00 AM</div>
+      <div class="time-slot" onclick="selectTime(this)" style="opacity:0.4;pointer-events:none;">1:00 PM</div>
+      <div class="time-slot" onclick="selectTime(this)">2:00 PM</div>
+      <div class="time-slot" onclick="selectTime(this)">3:00 PM</div>
+      <div class="time-slot" onclick="selectTime(this)" style="opacity:0.4;pointer-events:none;">4:00 PM</div>
+      <div class="time-slot" onclick="selectTime(this)">5:00 PM</div>
+    </div>
+    <div style="margin-top:10px;font-size:11px;color:#5a7a5a;">🟢 Available &nbsp; ⬜ Booked</div>
+  </div>
+
+  <div class="section-title">Your Details</div>
+  <div class="booking-step">
+    <div class="step-header">
+      <div class="step-num">4</div>
+      <div class="step-title">Contact info</div>
+    </div>
+    <div class="input-label">Full Name</div>
+    <input class="input-field" type="text" placeholder="e.g. James Robertson" value="James Robertson">
+    <div class="input-label">Phone Number</div>
+    <input class="input-field" type="tel" placeholder="e.g. 0412 345 678" value="0412 345 678">
+    <div class="input-label">Address / Job Site</div>
+    <input class="input-field" type="text" placeholder="e.g. 14 Forest Ave, Greenwood" value="14 Forest Ave, Greenwood">
+    <div class="input-label">Special Notes</div>
+    <input class="input-field" type="text" placeholder="e.g. Gate code, access info…">
+  </div>
+
+  <div style="padding:0 16px 12px;">
+    <button class="btn-primary" onclick="confirmBooking()">Confirm Booking →</button>
+  </div>
+</div>
+
+<!-- ═══════════════ BOOKING CONFIRMATION ═══════════════ -->
+<div class="screen" id="screen-confirm">
+  <div class="header">
+    <div class="wordmark">Clear<span>Sight</span> Trades</div>
+  </div>
+  <div class="confirm-box">
+    <div class="confirm-icon">✅</div>
+    <div class="confirm-title">Booking Confirmed!</div>
+    <div class="confirm-sub">Your appointment has been booked. You'll receive a reminder before your job.</div>
+    <div class="confirm-detail">
+      <div class="confirm-row"><span class="confirm-key">Service</span><span class="confirm-val" id="cfmService">Electrical Inspection</span></div>
+      <div class="confirm-row"><span class="confirm-key">Date</span><span class="confirm-val" id="cfmDate">Mon, Jul 14</span></div>
+      <div class="confirm-row"><span class="confirm-key">Time</span><span class="confirm-val" id="cfmTime">8:00 AM</span></div>
+      <div class="confirm-row"><span class="confirm-key">Technician</span><span class="confirm-val">James R.</span></div>
+      <div class="confirm-row"><span class="confirm-key">Status</span><span class="confirm-val">✅ Confirmed</span></div>
+    </div>
+  </div>
+  <div style="padding:0 16px;">
+    <button class="btn-primary" onclick="showScreen('screen-payments')" style="margin-bottom:10px;">Pay Now 💳</button>
+    <button class="btn-secondary" style="width:100%;" onclick="showScreen('screen-home')">Back to Home</button>
+  </div>
+</div>
+
+<!-- ═══════════════ PAYMENTS SCREEN ═══════════════ -->
+<div class="screen" id="screen-payments">
+  <div class="header">
+    <div class="wordmark">Clear<span>Sight</span> Trades</div>
+    <div class="tagline">Payments</div>
+  </div>
+
+  <div class="section-title">Outstanding Invoice</div>
+  <div class="payment-card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+      <div>
+        <div class="payment-amount">$120.00</div>
+        <div class="payment-desc">Electrical Inspection · Jul 18</div>
+      </div>
+      <span class="badge badge-gold">Due</span>
+    </div>
+    <div style="margin-top:14px;">
+      <div class="invoice-row"><span class="invoice-label">Service</span><span class="invoice-value">Electrical Inspection</span></div>
+      <div class="invoice-row"><span class="invoice-label">Labour</span><span class="invoice-value">$100.00</span></div>
+      <div class="invoice-row"><span class="invoice-label">GST (10%)</span><span class="invoice-value">$10.00</span></div>
+      <div class="invoice-row"><span class="invoice-label">Call-out fee</span><span class="invoice-value">$10.00</span></div>
+      <div class="invoice-row invoice-total"><span class="invoice-label">Total</span><span class="invoice-value">$120.00</span></div>
+    </div>
+  </div>
+
+  <div class="section-title">Pay With</div>
+  <div class="payment-method selected" onclick="selectMethod(this)">
+    <span class="method-icon">💳</span>
+    <div>
+      <div class="method-name">Card •••• 4291</div>
+      <div class="method-sub">Visa · Expires 08/27</div>
+    </div>
+    <span class="method-check">✓</span>
+  </div>
+  <div class="payment-method" onclick="selectMethod(this)">
+    <span class="method-icon">🍎</span>
+    <div>
+      <div class="method-name">Apple Pay</div>
+      <div class="method-sub">Touch ID enabled</div>
+    </div>
+    <span class="method-check" style="opacity:0;">✓</span>
+  </div>
+  <div class="payment-method" onclick="selectMethod(this)">
+    <span class="method-icon">🏦</span>
+    <div>
+      <div class="method-name">Bank Transfer</div>
+      <div class="method-sub">BSB 062-111 · Acc ••••3321</div>
+    </div>
+    <span class="method-check" style="opacity:0;">✓</span>
+  </div>
+
+  <div style="padding:16px 16px 4px;">
+    <button class="btn-primary" onclick="processPayment()">Pay $120.00 →</button>
+  </div>
+
+  <div class="section-title">Payment History</div>
+  <div class="card">
+    <div style="padding:14px 16px;">
+      <div class="invoice-row">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#e8f0e8;">Plumbing Repair</div>
+          <div style="font-size:11px;color:#7a9a7a;">Jun 29, 2025</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:14px;font-weight:700;color:#d4a574;">$180.00</div>
+          <span class="badge">Paid</span>
+        </div>
+      </div>
+      <div class="invoice-row">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#e8f0e8;">HVAC Service</div>
+          <div style="font-size:11px;color:#7a9a7a;">May 14, 2025</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:14px;font-weight:700;color:#d4a574;">$240.00</div>
+          <span class="badge">Paid</span>
+        </div>
+      </div>
+      <div class="invoice-row" style="border:none;">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#e8f0e8;">Roof Inspection</div>
+          <div style="font-size:11px;color:#7a9a7a;">Apr 02, 2025</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:14px;font-weight:700;color:#d4a574;">$95.00</div>
+          <span class="badge">Paid</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAYMENT SUCCESS ═══════════════ -->
+<div class="screen" id="screen-paysuccess">
+  <div class="header">
+    <div class="wordmark">Clear<span>Sight</span> Trades</div>
+  </div>
+  <div class="confirm-box">
+    <div class="confirm-icon">💚</div>
+    <div class="confirm-title">Payment Successful!</div>
+    <div class="confirm-sub">Your payment of <strong style="color:#d4a574;">$120.00</strong> has been received. A receipt has been sent to your email.</div>
+    <div class="confirm-detail">
+      <div class="confirm-row"><span class="confirm-key">Invoice #</span><span class="confirm-val">CST-2025-0148</span></div>
+      <div class="confirm-row"><span class="confirm-key">Amount</span><span class="confirm-val">$120.00</span></div>
+      <div class="confirm-row"><span class="confirm-key">Method</span><span class="confirm-val">Visa •••• 4291</span></div>
+      <div class="confirm-row"><span class="confirm-key">Status</span><span class="confirm-val">✅ Paid</span></div>
+    </div>
+  </div>
+  <div style="padding:0 16px;">
+    <button class="btn-primary" style="margin-bottom:10px;" onclick="showScreen('screen-home')">Back to Home</button>
+    <button class="btn-secondary" style="width:100%;" onclick="showScreen('screen-profile')">View Profile →</button>
+  </div>
+</div>
+
+<!-- ═══════════════ GALLERY SCREEN ═══════════════ -->
+<div class="screen" id="screen-gallery">
+  <div class="header">
+    <div class="wordmark">Clear<span>Sight</span> Trades</div>
+    <div class="tagline">Our Work</div>
+  </div>
+
+  <div class="section-title">Photo Gallery</div>
+  <div class="gallery-filter">
+    <div class="filter-btn active" onclick="filterGallery(this,'All')">All</div>
+    <div class="filter-btn" onclick="filterGallery(this,'Electrical')">Electrical</div>
+    <div class="filter-btn" onclick="filterGallery(this,'Plumbing')">Plumbing</div>
+    <div class="filter-btn" onclick="filterGallery(this,'HVAC')">HVAC</div>
+    <div class="filter-btn" onclick="filterGallery(this,'Roofing')">Roofing</div>
+  </div>
+
+  <div class="gallery-grid">
+    <div class="gallery-item featured" onclick="showToast('Before & After — Panel Upgrade')">
+      <div class="gallery-emoji">⚡🔌</div>
+      <div class="overlay"><span class="gallery-caption">Electrical Panel Upgrade — Before & After</span></div>
+    </div>
+    <div class="gallery-item" onclick="showToast('Burst pipe repair complete')">
+      <div class="gallery-emoji">🔧</div>
+      <div class="overlay"><span class="gallery-caption">Burst Pipe Repair</span></div>
+    </div>
+    <div class="gallery-item" onclick="showToast('New HVAC system installed')">
+      <div class="gallery-emoji">❄️</div>
+      <div class="overlay"><span class="gallery-caption">HVAC Install</span></div>
+    </div>
+    <div class="gallery-item" onclick="showToast('Roof inspection via drone')">
+      <div class="gallery-emoji">🚁</div>
+      <div class="overlay"><span class="gallery-caption">Drone Roof Survey</span></div>
+    </div>
+    <div class="gallery-item" onclick="showToast('Switchboard rewiring job')">
+      <div class="gallery-emoji">🔌</div>
+      <div class="overlay"><span class="gallery-caption">Switchboard Rewire</span></div>
+    </div>
+    <div class="gallery-item" onclick="showToast('Hot water system replaced')">
+      <div class="gallery-emoji">🚿</div>
+      <div class="overlay"><span class="gallery-caption">Hot Water System</span></div>
+    </div>
+    <div class="gallery-item featured" onclick="showToast('New tile roof — 3BR home')">
+      <div class="gallery-emoji">🏠🌲</div>
+      <div class="overlay"><span class="gallery-caption">Tile Roof Replacement — Greenwood Estate</span></div>
+    </div>
+    <div class="gallery-item" onclick="showToast('EV charger installation')">
+      <div class="gallery-emoji">🔋</div>
+      <div class="overlay"><span class="gallery-caption">EV Charger Install</span></div>
+    </div>
+    <div class="gallery-item" onclick="showToast('Bathroom repiping complete')">
+      <div class="gallery-emoji">🛁</div>
+      <div class="overlay"><span class="gallery-caption">Bathroom Repipe</span></div>
+    </div>
+  </div>
+
+  <div style="padding:16px;">
+    <button class="btn-primary" onclick="showScreen('screen-book')">Book a Job Like This</button>
+  </div>
+</div>
+
+<!-- ═══════════════ REVIEWS SCREEN ═══════════════ -->
+<div class="screen" id="screen-reviews">
+  <div class="header">
+    <div class="wordmark">Clear<span>Sight</span> Trades</div>
+    <div class="tagline">Reviews & Ratings</div>
+  </div>
+
+  <div class="section-title">Overall Rating</div>
+  <div class="review-summary">
+    <div style="display:flex;align-items:center;gap:20px;">
+      <div>
+        <div class="big-rating">4.9</div>
+        <div class="rating-stars">★★★★★</div>
+        <div class="rating-count">From 214 reviews</div>
+      </div>
+      <div style="flex:1;">
+        <div class="rating-bar-row"><span class="rating-bar-label">5</span><div class="rating-bar-track"><div class="rating-bar-fill" style="width:88%;"></div></div><span style="font-size:11px;color:#7a9a7a;margin-left:4px;">189</span></div>
+        <div class="rating-bar-row"><span class="rating-bar-label">4</span><div class="rating-bar-track"><div class="rating-bar-fill" style="width:9%;"></div></div><span style="font-size:11px;color:#7a9a7a;margin-left:4px;">19</span></div>
+        <div class="rating-bar-row"><span class="rating-bar-label">3</span><div class="rating-bar-track"><div class="rating-bar-fill" style="width:2%;"></div></div><span style="font-size:11px;color:#7a9a7a;margin-left:4px;">4</span></div>
+        <div class="rating-bar-row"><span class="rating-bar-label">2</span><div class="rating-bar-track"><div class="rating-bar-fill" style="width:1%;"></div></div><span style="font-size:11px;color:#7a9a7a;margin-left:4px;">2</span></div>
+        <div class="rating-bar-row"><span class="rating-bar-label">1</span><div class="rating-bar-track"><div class="rating-bar-fill" style="width:0%;"></div></div><span style="font-size:11px;color:#7a9a7a;margin-left:4px;">0</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Recent Reviews</div>
+
+  <div class="review-card">
+    <div class="review-header">
+      <div class="avatar">T</div>
+      <div>
+        <div class="review-name">Tom H.</div>
+        <div class="review-date">July 12, 2025</div>
+      </div>
+      <div style="margin-left:auto;color:#d4a574;font-size:14px;">★★★★★</div>
+    </div>
+    <div class="review-text">"Incredible work on our electrical panel. Fast, professional and very fairly priced. Will definitely book again!"</div>
+    <div class="review-service">📋 Electrical Inspection</div>
+  </div>
+
+  <div class="review-card">
+    <div class="review-header">
+      <div class="avatar" style="background:linear-gradient(135deg,#8b4513,#d4a574);">S</div>
+      <div>
+        <div class="review-name">Sarah M.</div>
+        <div class="review-date">June 30, 2025</div>
+      </div>
+      <div style="margin-left:auto;color:#d4a574;font-size:14px;">★★★★★</div>
+    </div>
+    <div class="review-text">"Fixed our burst pipe same day we called. Saved our hardwood floors from water damage. Amazing service!"</div>
+    <div class="review-service">📋 Plumbing Repair</div>
+  </div>
+
+  <div class="review-card">
+    <div class="review-header">
+      <div class="avatar" style="background:linear-gradient(135deg,#1a5f7a,#3a9abf);">R</div>
+      <div>
+        <div class="review-name">Ryan C.</div>
+        <div class="review-date">June 14, 2025</div>
+      </div>
+      <div style="margin-left:auto;color:#d4a574;font-size:14px;">★★★★★</div>
+    </div>
+    <div class="review-text">"Had my whole HVAC system replaced. The team was clean, tidy and had it done in under 3 hours. Exceptional."</div>
+    <div class="review-service">📋 HVAC Service</div>
+  </div>
+
+  <div class="review-card">
+    <div class="review-header">
+      <div class="avatar" style="background:linear-gradient(135deg,#5f1a5f,#bf3abf);">L</div>
+      <div>
+        <div class="review-name">Linda K.</div>
+        <div class="review-date">May 22, 2025</div>
+      </div>
+      <div style="margin-left:auto;color:#d4a574;font-size:14px;">★★★★<span style="color:#3a5a3a;">★</span></div>
+    </div>
+    <div class="review-text">"Roof inspection was thorough. Found a couple of tiles I didn't know were cracked. Very detailed report provided."</div>
+    <div class="review-service">📋 Roof Inspection</div>
+  </div>
+
+  <div style="padding:16px;">
+    <button class="btn-primary" onclick="showScreen('screen-book')">Book a Job Today</button>
+  </div>
+</div>
+
+<!-- ═══════════════ NOTIFICATIONS SCREEN ═══════════════ -->
+<div class="screen" id="screen-notifs">
+  <div class="header">
+    <div class="wordmark">Clear<span>Sight</span> Trades</div>
+    <div class="tagline">Notifications</div>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px 0;">
+    <span class="section-title" style="padding:0;">Today</span>
+    <span style="font-size:12px;color:#d4a574;font-weight:600;cursor:pointer;" onclick="showToast('All notifications cleared')">Mark all read</span>
+  </div>
+
+  <div class="notif-item unread" onclick="showScreen('screen-book')">
+    <div class="notif-dot"></div>
+    <div class="notif-icon-wrap ni-green">📅</div>
+    <div class="notif-content">
+      <div class="title">Appointment Tomorrow</div>
+      <div class="body">Your Electrical Inspection is confirmed for tomorrow at 9:00 AM. Technician: James R.</div>
+      <div class="notif-time">2 hours ago</div>
+    </div>
+    <div class="notif-unread-badge">NEW</div>
+  </div>
+
+  <div class="notif-item unread" onclick="showScreen('screen-payments')">
+    <div class="notif-dot"></div>
+    <div class="notif-icon-wrap ni-gold">💳</div>
+    <div class="notif-content">
+      <div class="title">Invoice Ready</div>
+      <div class="body">Invoice #CST-2025-0148 for $120.00 is ready. Tap to pay securely online.</div>
+      <div class="notif-time">5 hours ago</div>
+    </div>
+    <div class="notif-unread-badge">NEW</div>
+  </div>
+
+  <div class="notif-item" onclick="showScreen('screen-reviews')">
+    <div class="notif-dot read"></div>
+    <div class="notif-icon-wrap ni-gold">⭐</div>
+    <div class="notif-content">
+      <div class="title">How did we do?</div>
+      <div class="body">Please leave a review for your Plumbing Repair on Jun 29. Your feedback matters!</div>
+      <div class="notif-time">Yesterday</div>
+    </div>
+  </div>
+
+  <div style="padding:14px 20px 0;"><span class="section-title" style="padding:0;display:block;margin-bottom:6px;">Earlier</span></div>
+
+  <div class="notif-item" onclick="showScreen('screen-book')">
+    <div class="notif-dot read"></div>
+    <div class="notif-icon-wrap ni-green">🔔</div>
+    <div class="notif-content">
+      <div class="title">Booking Confirmed</div>
+      <div class="body">Your Plumbing Repair on Aug 3 at 2:30 PM has been confirmed. Sarah M. will attend.</div>
+      <div class="notif-time">2 days ago</div>
+    </div>
+  </div>
+
+  <div class="notif-item" onclick="showScreen('screen-payments')">
+    <div class="notif-dot read"></div>
+    <div class="notif-icon-wrap ni-gold">✅</div>
+    <div class="notif-content">
+      <div class="title">Payment Received</div>
+      <div class="body">$180.00 for Plumbing Repair received. Receipt sent to your email. Thank you!</div>
+      <div class="notif-time">Jun 29</div>
+    </div>
+  </div>
+
+  <div class="notif-item" onclick="showScreen('screen-gallery')">
+    <div class="notif-dot read"></div>
+    <div class="notif-icon-wrap ni-green">📷</div>
+    <div class="notif-content">
+      <div class="title">Job Photos Ready</div>
+      <div class="body">Your job completion photos for HVAC Service are now in the gallery. Tap to view.</div>
+      <div class="notif-time">May 14</div>
+    </div>
+  </div>
+
+  <div style="padding:16px;">
+    <button class="btn-secondary" style="width:100%;" onclick="showScreen('screen-home')">Back to Home</button>
+  </div>
+</div>
+
+<!-- ═══════════════ PROFILE SCREEN ═══════════════ -->
+<div class="screen" id="screen-profile">
+  <div class="profile-header">
+    <div class="profile-avatar">👷</div>
+    <div class="profile-name">James Robertson</div>
+    <div class="profile-email">james.r@email.com · 0412 345 678</div>
+    <div style="margin-top:10px;">
+      <span class="chip">🏆 Loyal Customer</span>
+      <span class="chip">4 Bookings</span>
+    </div>
+  </div>
+
+  <div class="section-title">My Appointments</div>
+  <div class="appt-mini" onclick="showScreen('screen-book')">
+    <div class="appt-date-box">
+      <div class="appt-month">JUL</div>
+      <div class="appt-day">18</div>
+    </div>
+    <div style="flex:1;">
+      <div style="font-size:14px;font-weight:700;color:#e8f0e8;">Electrical Inspection</div>
+      <div style="font-size:12px;color:#7a9a7a;margin-top:2px;">9:00 AM · James R. · $120</div>
+    </div>
+    <span class="badge">Confirmed</span>
+  </div>
+  <div class="appt-mini" onclick="showScreen('screen-book')">
+    <div class="appt-date-box" style="background:#d4a574;">
+      <div class="appt-month" style="color:#5a3a0a;">AUG</div>
+      <div class="appt-day" style="color:#0a0f0a;">03</div>
+    </div>
+    <div style="flex:1;">
+      <div style="font-size:14px;font-weight:700;color:#e8f0e8;">Plumbing Repair</div>
+      <div style="font-size:12px;color:#7a9a7a;margin-top:2px;">2:30 PM · Sarah M. · $180</div>
+    </div>
+    <span class="badge badge-gold">Pending</span>
+  </div>
+
+  <div class="section-title">Account</div>
+  <div style="background:#0d1a0d;border:1px solid #1e3a1e;border-radius:16px;margin:0 16px;overflow:hidden;">
+    <div class="profile-row" onclick="showScreen('screen-payments')">
+      <div class="profile-icon">💳</div>
+      <div class="profile-text">
+        <div class="title">Payments & Invoices</div>
+        <div class="sub">View history, pay invoices</div>
+      </div>
+      <span class="profile-arrow">›</span>
+    </div>
+    <div class="profile-row" onclick="showScreen('screen-notifs')">
+      <div class="profile-icon">🔔</div>
+      <div class="profile-text">
+        <div class="title">Notification Settings</div>
+        <div class="sub">Reminders, alerts, updates</div>
+      </div>
+      <span class="profile-arrow">›</span>
+    </div>
+    <div class="profile-row" onclick="showScreen('screen-gallery')">
+      <div class="profile-icon">📷</div>
+      <div class="profile-text">
+        <div class="title">My Job Photos</div>
+        <div class="sub">Before & after gallery</div>
+      </div>
+      <span class="profile-arrow">›</span>
+    </div>
+    <div class="profile-row" onclick="showScreen('screen-reviews')">
+      <div class="profile-icon">⭐</div>
+      <div class="profile-text">
+        <div class="title">My Reviews</div>
+        <div class="sub">Rate your experience</div>
+      </div>
+      <span class="profile-arrow">›</span>
+    </div>
+    <div class="profile-row" onclick="showToast('Account settings updated')">
+      <div class="profile-icon">⚙️</div>
+      <div class="profile-text">
+        <div class="title">Account Settings</div>
+        <div class="sub">Edit profile, change password</div>
+      </div>
+      <span class="profile-arrow">›</span>
+    </div>
+  </div>
+
+  <div style="padding:16px;">
+    <button class="btn-primary" onclick="showScreen('screen-book')">Book Another Job</button>
+  </div>
+  <div style="text-align:center;padding:0 16px 12px;">
+    <span style="font-size:12px;color:#3a5a3a;cursor:pointer;" onclick="showToast('Logged out')">Log Out</span>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+function showScreen(id){
+  var s=document.querySelectorAll('.screen');
+  for(var i=0;i<s.length;i++){s[i].classList.remove('active');}
+  var el=document.getElementById(id);
+  if(el){el.classList.add('active');}
+  var t=document.querySelectorAll('.tab');
+  for(var j=0;j<t.length;j++){t[j].classList.remove('tabon');}
+  var bt=document.getElementById('tab-'+id.replace('screen-',''));
+  if(bt){bt.classList.add('tabon');}
+  window.scrollTo(0,0);
+}
+
+var selectedService='Electrical Inspection';
+var selectedDate='Mon, Jul 14';
+var selectedTime='8:00 AM';
+
+function selectService(el, name, duration, price){
+  var all=document.querySelectorAll('.service-radio');
+  for(var i=0;i<all.length;i++){all[i].classList.remove('on');}
+  el.querySelector('.service-radio').classList.add('on');
+  selectedService=name;
+}
+
+function selectDate(el, day, full){
+  var all=document.querySelectorAll('.date-pill');
+  for(var i=0;i<all.length;i++){all[i].classList.remove('selected');}
+  el.classList.add('selected');
+  selectedDate=day+', '+full;
+}
+
+function selectTime(el){
+  var all=document.querySelectorAll('.time-slot');
+  for(var i=0;i<all.length;i++){all[i].classList.remove('selected');}
+  el.classList.add('selected');
+  selectedTime=el.textContent;
+}
+
+function confirmBooking(){
+  document.getElementById('cfmService').textContent=selectedService;
+  document.getElementById('cfmDate').textContent=selectedDate;
+  document.getElementById('cfmTime').textContent=selectedTime;
+  showScreen('screen-confirm');
+  showToast('Booking confirmed! 🎉');
+}
+
+function processPayment(){
+  showScreen('screen-paysuccess');
+  showToast('Payment of $120.00 received ✅');
+}
+
+function selectMethod(el){
+  var all=document.querySelectorAll('.payment-method');
+  for(var i=0;i<all.length;i++){
+    all[i].classList.remove('selected');
+    all[i].querySelector('.method-check').style.opacity='0';
+  }
+  el.classList.add('selected');
+  el.querySelector('.method-check').style.opacity='1';
+}
+
+function filterGallery(el, cat){
+  var all=document.querySelectorAll('.filter-btn');
+  for(var i=0;i<all.length;i++){all[i].classList.remove('active');}
+  el.classList.add('active');
+  showToast('Showing: '+cat);
+}
+
+function showToast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');},2200);
+}
+</script>
+<style>.screen{display:none!important}.screen.active{display:block!important}.tab.tabon{opacity:1!important;filter:brightness(1.4)}</style>
+<script>
+(function(){
+  function showScreen(id){
+    if(id && id.indexOf('screen-')!==0){id='screen-'+id;}
+    var s=document.querySelectorAll('.screen');
+    for(var i=0;i<s.length;i++){s[i].classList.remove('active');}
+    var el=document.getElementById(id)||document.querySelector('.screen[data-screen="'+id.replace('screen-','')+'"]');
+    if(el){el.classList.add('active');}
+    var t=document.querySelectorAll('.tab');
+    for(var j=0;j<t.length;j++){t[j].classList.remove('tabon');}
+    var bt=document.getElementById('tab-'+id.replace('screen-',''));
+    if(bt){bt.classList.add('tabon');}
+    window.scrollTo(0,0);
+  }
+  window.showScreen=showScreen;
+  document.addEventListener('DOMContentLoaded',function(){
+    // Make sure at least one screen is visible on load.
+    var screens=document.querySelectorAll('.screen');
+    if(screens.length){
+      var anyActive=document.querySelector('.screen.active');
+      if(!anyActive){screens[0].classList.add('active');}
+    }
+    // Backup: wire any element that references showScreen via data-nav too.
+    var navs=document.querySelectorAll('[data-nav]');
+    for(var k=0;k<navs.length;k++){
+      (function(n){n.addEventListener('click',function(){showScreen(n.getAttribute('data-nav'));});})(navs[k]);
+    }
+  });
+})();
+</script></body>
+</html>
